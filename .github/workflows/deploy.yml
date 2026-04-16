@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - master
+  workflow_dispatch:
 
 env:
   DEPLOY_PATH: "/opt/sie-muhave"
