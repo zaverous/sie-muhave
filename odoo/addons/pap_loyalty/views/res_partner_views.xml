@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_partner_form_loyalty" model="ir.ui.view">
+        <field name="name">res.partner.form.loyalty</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Fidelización" name="loyalty_program">
+                    <group>
+                        <field name="commercial_consent"/>
+                        <field name="loyalty_points" readonly="1"/>
+                    </group>
+                    <field name="loyalty_move_ids" readonly="1">
+                        <tree>
+                            <field name="date"/>
+                            <field name="reference"/>
+                            <field name="move_type"/>
+                            <field name="points"/>
+                            <field name="state"/>
+                        </tree>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

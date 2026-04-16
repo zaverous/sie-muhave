@@ -17,3 +17,4 @@ Thumbs.db
 # Temporales de SuiteCRM si se mapean
 suitecrm/SuiteCRM-8.9.1/cache/
 suitecrm/SuiteCRM-8.9.1/upload/
+.dual-graph/

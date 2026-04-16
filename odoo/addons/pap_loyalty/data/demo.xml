@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- ============================================================
+             CUSTOMERS (res.partner)
+        ============================================================ -->
+
+        <!-- University Department (company) -->
+        <record id="partner_universidad_dept" model="res.partner">
+            <field name="name">Departamento de Ingeniería - Universidad de Sevilla</field>
+            <field name="is_company">True</field>
+            <field name="customer_rank">1</field>
+            <field name="email">dpto.ingenieria@us.es</field>
+            <field name="phone">954000001</field>
+        </record>
+
+        <!-- Student 1 -->
+        <record id="partner_student_01" model="res.partner">
+            <field name="name">Laura García Pérez</field>
+            <field name="is_company">False</field>
+            <field name="customer_rank">1</field>
+            <field name="email">laura.garcia@alum.us.es</field>
+            <field name="phone">600000001</field>
+            <field name="comment">Estudiante universitaria - Grado en Administración</field>
+        </record>
+
+        <!-- Student 2 -->
+        <record id="partner_student_02" model="res.partner">
+            <field name="name">Carlos Martínez López</field>
+            <field name="is_company">False</field>
+            <field name="customer_rank">1</field>
+            <field name="email">carlos.martinez@alum.us.es</field>
+            <field name="phone">600000002</field>
+            <field name="comment">Estudiante universitario - Grado en Ingeniería Informática</field>
+        </record>
+
+        <!-- ============================================================
+             PRODUCTS (product.template)
+        ============================================================ -->
+
+        <!-- Service: Fotocopia B/N -->
+        <record id="product_fotocopia_bn" model="product.template">
+            <field name="name">Fotocopia B/N</field>
+            <field name="type">service</field>
+            <field name="list_price">0.05</field>
+            <field name="uom_id" ref="uom.product_uom_unit"/>
+            <field name="uom_po_id" ref="uom.product_uom_unit"/>
+            <field name="categ_id" ref="product.product_category_all"/>
+            <field name="sale_ok">True</field>
+            <field name="purchase_ok">False</field>
+            <field name="available_in_pos">True</field>
+        </record>
+
+        <!-- Service: Encuadernación -->
+        <record id="product_encuadernacion" model="product.template">
+            <field name="name">Encuadernación</field>
+            <field name="type">service</field>
+            <field name="list_price">2.50</field>
+            <field name="uom_id" ref="uom.product_uom_unit"/>
+            <field name="uom_po_id" ref="uom.product_uom_unit"/>
+            <field name="categ_id" ref="product.product_category_all"/>
+            <field name="sale_ok">True</field>
+            <field name="purchase_ok">False</field>
+            <field name="available_in_pos">True</field>
+        </record>
+
+        <!-- Storable: Paquete Folios A4 -->
+        <record id="product_folios_a4" model="product.template">
+            <field name="name">Paquete Folios A4</field>
+            <field name="type">product</field>
+            <field name="list_price">3.99</field>
+            <field name="uom_id" ref="uom.product_uom_unit"/>
+            <field name="uom_po_id" ref="uom.product_uom_unit"/>
+            <field name="categ_id" ref="product.product_category_all"/>
+            <field name="sale_ok">True</field>
+            <field name="purchase_ok">True</field>
+            <field name="available_in_pos">True</field>
+        </record>
+
+        <!-- Storable: Bolígrafo Azul -->
+        <record id="product_bolígrafo_azul" model="product.template">
+            <field name="name">Bolígrafo Azul</field>
+            <field name="type">product</field>
+            <field name="list_price">0.75</field>
+            <field name="uom_id" ref="uom.product_uom_unit"/>
+            <field name="uom_po_id" ref="uom.product_uom_unit"/>
+            <field name="categ_id" ref="product.product_category_all"/>
+            <field name="sale_ok">True</field>
+            <field name="purchase_ok">True</field>
+            <field name="available_in_pos">True</field>
+        </record>
+
+        <!-- ============================================================
+             USERS (res.users)
+        ============================================================ -->
+
+        <!-- Shop Manager -->
+        <record id="user_shop_manager" model="res.users">
+            <field name="name">Gerente de Tienda</field>
+            <field name="login">gerente@papeleria-estudiante.es</field>
+            <field name="email">gerente@papeleria-estudiante.es</field>
+            <field name="groups_id" eval="[(4, ref('base.group_user')), (4, ref('point_of_sale.group_pos_manager'))]"/>
+        </record>
+
+        <!-- Cashier -->
+        <record id="user_cashier" model="res.users">
+            <field name="name">Cajero</field>
+            <field name="login">cajero@papeleria-estudiante.es</field>
+            <field name="email">cajero@papeleria-estudiante.es</field>
+            <field name="groups_id" eval="[(4, ref('base.group_user')), (4, ref('point_of_sale.group_pos_user'))]"/>
+        </record>
+
+    </data>
+</odoo>
