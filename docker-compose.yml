@@ -15,6 +15,9 @@ services:
       - HOST=db_odoo
       - USER=odoo
       - PASSWORD=odoo_pass
+    networks:
+      - default
+      - proxy
 
   db_odoo:
     image: postgres:15
@@ -47,6 +50,9 @@ services:
       sh -c "chown -R www-data:www-data /var/www/html/cache /var/www/html/custom /var/www/html/logs /var/www/html/public/legacy/upload 2>/dev/null || true &&
             chmod -R 775 /var/www/html/cache /var/www/html/custom /var/www/html/logs /var/www/html/public/legacy/upload 2>/dev/null || true &&
             apache2-foreground"
+    networks:
+      - default
+      - proxy
 
 
   db_suitecrm:
@@ -82,6 +88,9 @@ services:
         condition: service_healthy
     volumes:
       - bonita-data:/opt/bonita
+    networks:
+      - default
+      - proxy
 
   db_bonita:
     image: bonitasoft/bonita-postgres:15.4
@@ -91,7 +100,7 @@ services:
     # Uncomment those lines to mount a volume with your dumps
     #volumes:
     #  - ~/my/test/dumps:/opt/bonita/dump
-    
+
     #environment:
     #  - POSTGRES_DB=bonita
     #  - POSTGRES_USER=bonita
@@ -107,6 +116,9 @@ services:
       - "5678:5678"
     volumes:
       - n8n-data:/home/node/.n8n
+    networks:
+      - default
+      - proxy
 
   # Email Fake Server: smtp4dev
   smtp4dev:
@@ -118,6 +130,9 @@ services:
     volumes:
       - smtp4dev-data:/smtp4dev
     restart: always
+    networks:
+      - default
+      - proxy
 
   # Gestión BD: pgAdmin 4 (para Odoo/PostgreSQL y Bonita/PostgreSQL)
   pgadmin:
@@ -130,6 +145,9 @@ services:
       - PGADMIN_DEFAULT_PASSWORD=admin
     volumes:
       - pgadmin-data:/var/lib/pgadmin
+    networks:
+      - default
+      - proxy
 
   # Gestión BD: phpMyAdmin (para SuiteCRM/MariaDB)
   phpmyadmin:
@@ -142,6 +160,9 @@ services:
       - PMA_PORT=3306
       - UPLOAD_LIMIT=64M
     restart: always
+    networks:
+      - default
+      - proxy
 
 volumes:
   odoo-web-data:
@@ -153,3 +174,9 @@ volumes:
   n8n-data:
   smtp4dev-data:
   pgadmin-data:
+
+networks:
+  default:
+    driver: bridge
+  proxy:
+    external: true
