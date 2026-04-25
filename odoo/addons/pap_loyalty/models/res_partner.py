@@ -6,18 +6,18 @@ class ResPartner(models.Model):
     _inherit = 'res.partner'
 
     loyalty_points = fields.Integer(
-        string='Loyalty Points',
+        string='Puntos de Fidelización',
         compute='_compute_loyalty_points',
         store=True,
     )
     commercial_consent = fields.Boolean(
-        string='Commercial Consent',
+        string='Consentimiento Comercial',
         default=False,
     )
     loyalty_move_ids = fields.One2many(
         comodel_name='pap.loyalty.move',
         inverse_name='partner_id',
-        string='Loyalty History',
+        string='Historial de Fidelización',
     )
 
     @api.depends('loyalty_move_ids.points', 'loyalty_move_ids.state')

@@ -6,15 +6,19 @@ class ProductTemplate(models.Model):
     _inherit = 'product.template'
 
     loyalty_eligible = fields.Boolean(
-        string='Earns Loyalty Points',
+        string='Apto para Fidelización',
         default=False,
     )
     redeemable = fields.Boolean(
-        string='Redeemable with Points',
+        string='Canjeable con Puntos',
         default=False,
     )
     loyalty_ratio = fields.Float(
-        string='Loyalty Ratio (pts/€)',
+        string='Ratio de Fidelización (pts/€)',
         default=0.0,
         digits=(16, 4),
+    )
+    loyalty_cost = fields.Integer(
+        string='Coste en Puntos',
+        default=0,
     )

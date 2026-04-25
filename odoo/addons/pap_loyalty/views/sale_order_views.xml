@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="pap_sale_order_form_view_inherit" model="ir.ui.view">
+        <field name="name">sale.order.form.pap.tipo.operacion</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <!-- Inserta el campo justo después de "Plazos de pago" (payment_term_id) -->
+            <xpath expr="//field[@name='payment_term_id']" position="after">
+                <field
+                    name="x_tipo_operacion"
+                    widget="radio"
+                    options="{'horizontal': true}"
+                />
+            </xpath>
+        </field>
+    </record>
+</odoo>

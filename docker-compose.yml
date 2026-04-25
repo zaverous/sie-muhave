@@ -10,7 +10,8 @@ services:
       - ./odoo/config:/etc/odoo
       - odoo-web-data:/var/lib/odoo
     depends_on:
-      - db_odoo
+      db_odoo:
+        condition: service_healthy
     environment:
       - HOST=db_odoo
       - USER=odoo
@@ -27,6 +28,13 @@ services:
       - POSTGRES_USER=odoo
     volumes:
       - odoo-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U odoo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - default
 
   # CRM: SuiteCRM v8
   suitecrm:
@@ -64,6 +72,8 @@ services:
       - MARIADB_ROOT_PASSWORD=root_pass
     volumes:
       - suitecrm-db-data:/var/lib/mysql
+    networks:
+      - default
 
   # BPM: Bonita Runtime 2023.2 con PostgreSQL
   bonita:
@@ -107,6 +117,8 @@ services:
     #  - POSTGRES_PASSWORD=bonita
     volumes:
       - bonita-db-data:/var/lib/postgresql/data
+    networks:
+      - default
 
   # Automatización: n8n
   n8n:

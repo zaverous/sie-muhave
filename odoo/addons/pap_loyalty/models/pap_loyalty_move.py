@@ -5,53 +5,53 @@ from odoo.exceptions import ValidationError
 
 class PapLoyaltyMove(models.Model):
     _name = 'pap.loyalty.move'
-    _description = 'Loyalty Points Move'
+    _description = 'Movimiento de Puntos de Fidelización'
     _order = 'date desc, id desc'
 
     reference = fields.Char(
-        string='Reference',
+        string='Referencia',
     )
     partner_id = fields.Many2one(
         comodel_name='res.partner',
-        string='Customer',
+        string='Cliente',
         required=True,
         ondelete='restrict',
     )
     sale_order_id = fields.Many2one(
         comodel_name='sale.order',
-        string='Sale Order',
+        string='Pedido de Venta',
         ondelete='set null',
     )
     date = fields.Datetime(
-        string='Date',
+        string='Fecha',
         default=fields.Datetime.now,
     )
     points = fields.Integer(
-        string='Points',
+        string='Puntos',
     )
     move_type = fields.Selection(
         selection=[
-            ('earn', 'Earn'),
-            ('redeem', 'Redeem'),
-            ('adjust', 'Adjust'),
+            ('earn', 'Acumular'),
+            ('redeem', 'Canjear'),
+            ('adjust', 'Ajuste'),
         ],
-        string='Type',
+        string='Tipo',
     )
     state = fields.Selection(
         selection=[
-            ('draft', 'Draft'),
-            ('done', 'Done'),
-            ('cancelled', 'Cancelled'),
+            ('draft', 'Borrador'),
+            ('done', 'Confirmado'),
+            ('cancelled', 'Cancelado'),
         ],
-        string='Status',
+        string='Estado',
         default='draft',
     )
     notes = fields.Text(
-        string='Notes',
+        string='Notas',
     )
 
     @api.constrains('points')
     def _check_points_not_zero(self):
         for move in self:
             if move.points == 0:
-                raise ValidationError("A loyalty move cannot have zero points.")
+                raise ValidationError("Un movimiento de fidelización no puede tener cero puntos.")

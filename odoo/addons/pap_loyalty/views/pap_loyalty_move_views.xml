@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- List / Tree view -->
+    <!-- Vista de lista -->
     <record id="pap_loyalty_move_view_tree" model="ir.ui.view">
         <field name="name">pap.loyalty.move.tree</field>
         <field name="model">pap.loyalty.move</field>
         <field name="arch" type="xml">
-            <tree string="Loyalty Moves">
+            <tree string="Movimientos de Fidelización">
                 <field name="date"/>
                 <field name="reference"/>
                 <field name="partner_id"/>
@@ -17,12 +17,12 @@
         </field>
     </record>
 
-    <!-- Form view -->
+    <!-- Vista de formulario -->
     <record id="pap_loyalty_move_view_form" model="ir.ui.view">
         <field name="name">pap.loyalty.move.form</field>
         <field name="model">pap.loyalty.move</field>
         <field name="arch" type="xml">
-            <form string="Loyalty Move">
+            <form string="Movimiento de Fidelización">
                 <header>
                     <field name="state" widget="statusbar"
                            statusbar_visible="draft,done,cancelled"/>
@@ -40,7 +40,7 @@
                             <field name="points"/>
                         </group>
                     </group>
-                    <group string="Notes">
+                    <group string="Notas">
                         <field name="notes" nolabel="1"/>
                     </group>
                 </sheet>
@@ -48,21 +48,21 @@
         </field>
     </record>
 
-    <!-- Window action -->
+    <!-- Acción de ventana -->
     <record id="action_pap_loyalty_move" model="ir.actions.act_window">
-        <field name="name">Loyalty Moves</field>
+        <field name="name">Movimientos de Fidelización</field>
         <field name="res_model">pap.loyalty.move</field>
         <field name="view_mode">tree,form</field>
     </record>
 
-    <!-- Top-level menu -->
+    <!-- Menú principal -->
     <menuitem
         id="menu_pap_loyalty_root"
         name="Fidelización"
         sequence="90"
         web_icon="pap_loyalty,static/description/icon.png"/>
 
-    <!-- Sub-menu -->
+    <!-- Submenú -->
     <menuitem
         id="menu_pap_loyalty_moves"
         name="Movimientos"

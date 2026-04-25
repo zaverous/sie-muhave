@@ -7,10 +7,11 @@
         <field name="inherit_id" ref="product.product_template_only_form_view"/>
         <field name="arch" type="xml">
             <xpath expr="//page[@name='sales']" position="inside">
-                <separator string="Loyalty Program"/>
+                <separator string="Programa de Fidelización"/>
                 <group>
                     <field name="loyalty_eligible"/>
                     <field name="redeemable"/>
+                    <field name="loyalty_cost" invisible="not redeemable"/>
                     <field name="loyalty_ratio"/>
                 </group>
             </xpath>

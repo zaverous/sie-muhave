@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 {
-    'name': 'Papelería El Estudiante - Loyalty',
+    'name': 'Papelería El Estudiante - Fidelización',
     'version': '17.0.1.0.0',
-    'summary': 'Loyalty and base configuration for Papelería El Estudiante',
+    'summary': 'Fidelización y configuración base para Papelería El Estudiante',
     'description': """
-        Base module for Papelería El Estudiante digitalization project.
-        Provides demo data, product catalog, and customer base setup.
+        Módulo base del proyecto de digitalización de Papelería El Estudiante.
+        Incluye datos de demostración, catálogo de productos y configuración de clientes.
     """,
     'author': 'Papelería El Estudiante',
     'category': 'Sales/Point of Sale',
@@ -20,6 +20,7 @@
         'views/pap_loyalty_move_views.xml',
         'views/res_partner_views.xml',
         'views/product_template_views.xml',
+        'views/sale_order_views.xml',
         'data/demo.xml',
     ],
     'installable': True,
