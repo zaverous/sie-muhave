@@ -18,6 +18,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Remove runtime-only paths before transfer
+        run: rm -rf .git suitecrm/upload
+
       - name: Transfer files to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -27,6 +30,7 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           source: "."
           target: ${{ env.DEPLOY_PATH }}
+          overwrite: true
 
       - name: Execute deployment on VPS
         uses: appleboy/ssh-action@v1.0.3
