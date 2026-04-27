@@ -24,6 +24,19 @@
         <field name="arch" type="xml">
             <form string="Movimiento de Fidelización">
                 <header>
+                    <button
+                        string="Confirmar"
+                        name="action_confirm"
+                        type="object"
+                        class="btn-primary"
+                        invisible="state != 'draft'"
+                    />
+                    <button
+                        string="Cancelar"
+                        name="action_cancel"
+                        type="object"
+                        invisible="state == 'cancelled'"
+                    />
                     <field name="state" widget="statusbar"
                            statusbar_visible="draft,done,cancelled"/>
                 </header>

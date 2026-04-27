@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="pap_loyalty_point_wizard_view_form" model="ir.ui.view">
+        <field name="name">pap.loyalty.point.wizard.form</field>
+        <field name="model">pap.loyalty.point.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Ajuste de Puntos">
+                <group>
+                    <field name="partner_id"/>
+                    <field name="points"/>
+                    <field name="notes"/>
+                </group>
+                <footer>
+                    <button
+                        string="Aplicar"
+                        name="action_apply"
+                        type="object"
+                        class="btn-primary"
+                    />
+                    <button string="Cancelar" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

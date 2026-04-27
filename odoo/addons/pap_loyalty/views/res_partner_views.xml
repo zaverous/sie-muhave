@@ -12,6 +12,14 @@
                         <field name="commercial_consent"/>
                         <field name="loyalty_points" readonly="1"/>
                     </group>
+                    <div class="mb-3">
+                        <button
+                            string="Añadir / Ajustar Puntos"
+                            type="object"
+                            name="action_open_loyalty_wizard"
+                            class="btn-primary"
+                        />
+                    </div>
                     <field name="loyalty_move_ids" readonly="1">
                         <tree>
                             <field name="date"/>

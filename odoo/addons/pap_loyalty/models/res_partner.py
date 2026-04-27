@@ -28,3 +28,14 @@ class ResPartner(models.Model):
                 for move in partner.loyalty_move_ids
                 if move.state == 'done'
             )
+
+    def action_open_loyalty_wizard(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Ajuste de Puntos',
+            'res_model': 'pap.loyalty.point.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_partner_id': self.id},
+        }

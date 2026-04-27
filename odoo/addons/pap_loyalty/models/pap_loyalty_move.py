@@ -55,3 +55,13 @@ class PapLoyaltyMove(models.Model):
         for move in self:
             if move.points == 0:
                 raise ValidationError("Un movimiento de fidelización no puede tener cero puntos.")
+
+    def action_confirm(self):
+        for move in self:
+            if move.state == 'draft':
+                move.state = 'done'
+
+    def action_cancel(self):
+        for move in self:
+            if move.state in ('draft', 'done'):
+                move.state = 'cancelled'

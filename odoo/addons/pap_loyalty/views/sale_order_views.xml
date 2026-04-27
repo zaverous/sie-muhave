@@ -5,13 +5,34 @@
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
-            <!-- Inserta el campo justo después de "Plazos de pago" (payment_term_id) -->
             <xpath expr="//field[@name='payment_term_id']" position="after">
                 <field
                     name="x_tipo_operacion"
                     widget="radio"
                     options="{'horizontal': true}"
                 />
+                <!-- Hidden fields needed for invisible conditions below -->
+                <field name="x_puntos_suficientes" invisible="1" readonly="1"/>
+                <field name="x_puntos_requeridos" invisible="1" readonly="1"/>
+                <group
+                    string="Resumen de Puntos"
+                    invisible="x_tipo_operacion != 'canje_puntos'"
+                >
+                    <field name="x_puntos_disponibles" readonly="1"/>
+                    <field name="x_puntos_requeridos" readonly="1"/>
+                </group>
+                <div
+                    class="alert alert-warning mb-0"
+                    invisible="x_tipo_operacion != 'canje_puntos' or x_puntos_requeridos == 0 or x_puntos_suficientes"
+                >
+                    Puntos insuficientes para completar este pedido.
+                </div>
+                <div
+                    class="alert alert-success mb-0"
+                    invisible="x_tipo_operacion != 'canje_puntos' or not x_puntos_suficientes"
+                >
+                    Puntos suficientes. Se aplicará un 100% de descuento en los productos canjeables al confirmar.
+                </div>
             </xpath>
         </field>
     </record>
