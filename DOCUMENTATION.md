@@ -233,6 +233,9 @@ Usuario selecciona "Canje por Puntos" en el pedido
 
 **Resultado:** El cliente paga con puntos; el pedido queda en cero monetariamente y el saldo se descuenta de forma atómica con la confirmación.
 
+![Pedido de venta en modo Canje por Puntos](docs/images/sale_order_canje_puntos.png)
+![Pedido de venta Exitoso en modo Canje por Puntos](docs/images/sale_order_exitoso.png)
+
 ---
 
 ### Flujo 3 — Encargo Complejo (`encargo`)
