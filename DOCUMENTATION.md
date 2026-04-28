@@ -43,7 +43,7 @@ pap_loyalty/
 └── views/
     ├── pap_loyalty_move_views.xml          # Lista, formulario y menú de movimientos
     ├── pap_loyalty_point_wizard_views.xml  # Formulario modal del asistente
-    ├── product_template_views.xml          # Campos de fidelización en la ficha de producto
+    ├── product_template_views.xml          # Fidelización (pestaña Ventas) + minimum_stock (cabecera producto)
     ├── res_partner_views.xml               # Pestaña Fidelización en la ficha de cliente
     └── sale_order_views.xml               # Campo tipo operación y bloque de puntos en el pedido
 ```
@@ -70,7 +70,7 @@ El flujo de alto nivel sigue una arquitectura **event-driven** basada en tres ca
 
 ---
 
-## 3. Modelos de Datos (Diccionario de Datos)
+## 4. Modelos de Datos (Diccionario de Datos)
 
 ### `res.partner` — Extensión del cliente
 
@@ -91,13 +91,14 @@ partner.loyalty_points = sum(
 
 ### `product.template` — Extensión del producto
 
-Define dos flags independientes: si el producto genera puntos al venderse (`loyalty_eligible`) y si puede adquirirse canjeando puntos (`redeemable`), junto con su coste en puntos.
+Define los flags de fidelización y el umbral de stock mínimo para la integración con n8n/Bonita. `minimum_stock` se muestra en la cabecera del producto junto a los checkboxes de venta/compra; los campos de fidelización aparecen en la pestaña Ventas.
 
 ```python
 loyalty_eligible = fields.Boolean(string='Apto para Fidelización')
 redeemable       = fields.Boolean(string='Canjeable con Puntos')
 loyalty_ratio    = fields.Float(string='Ratio pts/€')
 loyalty_cost     = fields.Integer(string='Coste en Puntos')
+minimum_stock    = fields.Integer(string='Stock Mínimo', default=0)
 ```
 
 ---
@@ -163,7 +164,7 @@ class PapLoyaltyPointWizard(models.TransientModel):
 
 ---
 
-## 4. Interfaz de Usuario (Vistas)
+## 5. Interfaz de Usuario (Vistas)
 
 ### Vistas modificadas (herencia)
 
@@ -171,7 +172,7 @@ class PapLoyaltyPointWizard(models.TransientModel):
 |---|---|
 | `sale.order` (formulario) | Campo radio `x_tipo_operacion` tras *Plazos de pago*; bloque condicional con puntos disponibles/requeridos y alertas de suficiencia. |
 | `res.partner` (formulario) | Nueva pestaña **Fidelización** con saldo, botón *Añadir / Ajustar Puntos* e historial de movimientos en modo lectura. |
-| `product.template` (formulario) | Campos `loyalty_eligible`, `redeemable`, `loyalty_ratio` y `loyalty_cost` en pestaña de configuración. |
+| `product.template` (formulario) | Campo `minimum_stock` en la cabecera junto a *Puede ser vendido/comprado*. Campos `loyalty_eligible`, `redeemable`, `loyalty_ratio` y `loyalty_cost` en pestaña **Ventas**. |
 
 ### Vistas nuevas
 
@@ -193,7 +194,7 @@ Fidelización
 
 ---
 
-## 5. Flujos de Trabajo (Workflows)
+## 6. Flujos de Trabajo (Workflows)
 
 ### Flujo 1 — Venta Directa (`venta_directa`)
 
@@ -247,14 +248,21 @@ Usuario confirma pedido (x_tipo_operacion = 'encargo')
     │
     └─► Webhook disparado hacia n8n
             │
-            └─► n8n autentica contra Bonita BPM (usuario/contraseña)
-                    │
-                    └─► n8n realiza POST a la API REST de Bonita
-                            └─► Se instancia nuevo caso en el proceso de preparación
+            ├─► n8n lee product.template vía JSON-RPC:
+            │       { qty_available, minimum_stock }
+            │
+            ├─► [IF] qty_available < minimum_stock
+            │       └─► n8n autentica contra Bonita BPM
+            │               └─► POST a API REST de Bonita con { cantidad_minima: minimum_stock }
+            │                       └─► Se instancia proceso de reposición de stock
+            │
+            └─► [SIEMPRE] n8n autentica contra Bonita BPM
+                    └─► POST a API REST de Bonita
+                            └─► Se instancia proceso de preparación del encargo
                                     └─► Tarea humana asignada al equipo de tienda en Bonita
 ```
 
-**Resultado:** Se abre automáticamente una tarea de preparación en Bonita BPM sin intervención manual del operador.
+**Resultado:** Se abren automáticamente las tareas en Bonita BPM: preparación del encargo siempre, y reposición de stock si el producto cae por debajo de `minimum_stock`.
 
 ![Flujo de n8n](docs/images/n8n_workflow.png)
 ![Bandeja de Bonita BPM](docs/images/bonita_bandeja.png)
