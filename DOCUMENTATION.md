@@ -194,77 +194,133 @@ Fidelización
 
 ---
 
-## 6. Flujos de Trabajo (Workflows)
+## 6. Flujos de Trabajo (Workflows) y Automatización
 
-### Flujo 1 — Venta Directa (`venta_directa`)
-
-```
-Usuario confirma pedido (x_tipo_operacion = 'venta_directa')
-    │
-    ├─► Odoo confirma la venta (estado → sale)
-    │
-    └─► Webhook disparado hacia n8n
-            │
-            └─► n8n llama a Odoo JSON-RPC
-                    └─► Crea pap.loyalty.move (move_type='earn', state='done')
-                            └─► loyalty_points del cliente se actualiza
-```
-
-**Resultado:** El cliente acumula puntos proporcionales a los productos elegibles del pedido.
+n8n actúa como orquestador central entre Odoo y Bonita BPM. Los flujos se activan bien mediante **Webhooks** lanzados desde Odoo al confirmar un pedido, bien mediante un **Schedule Trigger** programado. En todos los casos, n8n es responsable de leer datos de Odoo vía JSON-RPC, autenticarse en Bonita BPM para instanciar procesos, y notificar al cliente por correo. La lógica transaccional de puntos (canje) permanece íntegramente en Odoo y no pasa por n8n.
 
 ---
 
-### Flujo 2 — Canje por Puntos (`canje_puntos`)
+### Flujo 1 — Acumulación de Puntos (`n8n + Odoo`)
+
+Activado por Webhook cuando Odoo confirma un pedido de tipo `venta_directa`. n8n extrae los datos de la venta, calcula los puntos generados y registra el movimiento directamente en Odoo.
 
 ```
-Usuario selecciona "Canje por Puntos" en el pedido
-    │
-    ├─► Vista muestra x_puntos_disponibles y x_puntos_requeridos en tiempo real
-    │
-    └─► Usuario confirma
-            │
-            ├─► [GUARD] x_puntos_suficientes == False → UserError, bloqueo
-            │
-            └─► [OK] action_confirm():
-                    ├─► discount = 100% en líneas redeemable
-                    ├─► Venta confirmada (total neto = 0 €)
-                    └─► Crea pap.loyalty.move (move_type='redeem', points=-N, state='done')
-                                └─► Saldo del cliente decrementado
+[Odoo] Confirma pedido (venta_directa)
+    └─► Webhook  ──────────────────────────────────────►  [n8n]
+                                                              │
+                                                    ┌─────────┴──────────┐
+                                             getPedido   getCliente   getProductosComprados
+                                             (Odoo node) (Odoo node)  (Odoo node)
+                                                    └─────────┬──────────┘
+                                                              │
+                                                    Cálculo de puntos:
+                                                    loyalty_ratio × precio × cantidad
+                                                              │
+                                                    Odoo node: crea pap.loyalty.move
+                                                    (move_type='earn', state='done')
+                                                              │
+                                                    Send Email → cliente
+                                                    "Has acumulado N puntos"
 ```
 
-**Resultado:** El cliente paga con puntos; el pedido queda en cero monetariamente y el saldo se descuenta de forma atómica con la confirmación.
+**Nodos n8n involucrados:** `Webhook` · `getPedido` · `getCliente` · `getProductosComprados` · `Odoo` (create move) · `Send Email`
 
-![Pedido de venta en modo Canje por Puntos](docs/images/sale_order_canje_puntos.png)
+**Resultado:** El movimiento `earn` actualiza el saldo del cliente en Odoo y se notifica al cliente por correo.
+
+![Flujo 1 n8n — Acumulación de Puntos](docs/images/n8n_flujo1_puntos.png)
+
+---
+
+### Subflujo — Canje de Puntos (Nativo en Odoo, sin n8n)
+
+> **Este subflujo NO pasa por n8n.** Es lógica transaccional nativa del módulo `pap_loyalty`.
+
+El empleado selecciona `x_tipo_operacion = 'canje_puntos'` en el pedido. El modelo `sale.order` calcula en tiempo real los campos `x_puntos_disponibles` y `x_puntos_requeridos`. Al confirmar, el método `action_confirm()` en Python valida el saldo, aplica un descuento del 100 % sobre todas las líneas con `redeemable = True` y crea automáticamente un `pap.loyalty.move` de tipo `redeem` con puntos negativos — todo en una única transacción de base de datos.
+
+```
+[Empleado] Selecciona "Canje por Puntos" en el pedido
+    │
+    ├─► Vista muestra x_puntos_disponibles / x_puntos_requeridos (tiempo real)
+    │
+    └─► Confirmar pedido
+            │
+            ├─► [GUARD] x_puntos_suficientes == False → UserError, operación bloqueada
+            │
+            └─► [OK] sale.order.action_confirm() [Python]
+                    ├─► discount = 100 % en líneas redeemable
+                    ├─► Pedido confirmado (total neto = 0 €)
+                    └─► pap.loyalty.move (move_type='redeem', points=-N, state='done')
+                                └─► loyalty_points del cliente decrementado
+```
+
+**Resultado:** El cliente paga con puntos sin intervención externa; la atomicidad está garantizada por la transacción ORM de Odoo.
+
+![Pedido con canje de puntos](docs/images/sale_order_canje_puntos.png)
 ![Pedido de venta Exitoso en modo Canje por Puntos](docs/images/sale_order_exitoso.png)
 
 ---
 
-### Flujo 3 — Encargo Complejo (`encargo`)
+### Flujo 2 — Reposición de Bajo Stock (`n8n + Bonita + Odoo`)
+
+Activado por un **Schedule Trigger** programado a las **22:00 h** diariamente. n8n consulta Odoo en busca de productos con stock por debajo del umbral `minimum_stock`, inicia el proceso de reposición en Bonita BPM y genera automáticamente el borrador de pedido de compra en Odoo.
 
 ```
-Usuario confirma pedido (x_tipo_operacion = 'encargo')
+[n8n] Schedule Trigger — 22:00 h
     │
-    ├─► Odoo confirma la venta
-    │
-    └─► Webhook disparado hacia n8n
+    └─► Odoo node: busca product.product
+        WHERE qty_available ≤ minimum_stock
             │
-            ├─► n8n lee product.template vía JSON-RPC:
-            │       { qty_available, minimum_stock }
-            │
-            ├─► [IF] qty_available < minimum_stock
-            │       └─► n8n autentica contra Bonita BPM
-            │               └─► POST a API REST de Bonita con { cantidad_minima: minimum_stock }
-            │                       └─► Se instancia proceso de reposición de stock
-            │
-            └─► [SIEMPRE] n8n autentica contra Bonita BPM
-                    └─► POST a API REST de Bonita
-                            └─► Se instancia proceso de preparación del encargo
-                                    └─► Tarea humana asignada al equipo de tienda en Bonita
+            └─► Bonita: initializeSession → obtiene Token CSRF
+                    │
+                    └─► postStock: POST a API REST de Bonita
+                        { producto, stock_actual, cantidad_minima }
+                                │
+                                ├─► Bonita instancia proceso de reposición
+                                │       └─► Tarea humana asignada al equipo de compras
+                                │
+                                └─► Odoo node: crea purchase.order (borrador)
+                                        └─► purchase.order.line con proveedor asociado
 ```
 
-**Resultado:** Se abren automáticamente las tareas en Bonita BPM: preparación del encargo siempre, y reposición de stock si el producto cae por debajo de `minimum_stock`.
+**Nodos n8n involucrados:** `Schedule Trigger` · `Odoo` (search products) · `initializeSession` (HTTP Request) · `postStock` (HTTP Request) · `Odoo` (create purchase.order) · `Odoo` (create purchase.order.line)
 
-![Flujo de n8n](docs/images/n8n_workflow.png)
+**Resultado:** Al inicio de cada noche se detectan automáticamente las roturas de stock, se abre la tarea en Bonita y el borrador de pedido de compra queda listo en Odoo para aprobación.
+
+![Flujo 2 n8n — Reposición de Stock](docs/images/n8n_flujo2_stock.png)
+
+---
+
+### Flujo 3 — Gestión de Encargos (`n8n + Bonita`)
+
+Activado por Webhook cuando Odoo confirma un pedido de tipo `encargo`. n8n recoge los datos del pedido y del comprador, inicia la tarea humana en Bonita BPM y notifica al cliente cuando el encargo está listo para recoger.
+
+```
+[Odoo] Confirma pedido (encargo)
+    └─► Webhook  ──────────────────────────────────────►  [n8n]
+                                                              │
+                                                    ┌─────────┴─────────┐
+                                                  getPedido         getCliente
+                                                  (Odoo node)       (Odoo node)
+                                                    └─────────┬─────────┘
+                                                              │
+                                                    Bonita: initializeSession
+                                                    → Token CSRF
+                                                              │
+                                                    postEncargo: POST a API REST de Bonita
+                                                    { pedido_id, cliente, productos, ... }
+                                                              │
+                                                    Bonita instancia tarea humana
+                                                    "Preparar encargo"
+                                                              │
+                                                    Send Email → cliente
+                                                    "Su pedido está listo para recogida"
+```
+
+**Nodos n8n involucrados:** `Webhook` · `getPedido` · `getCliente` · `initializeSession` (HTTP Request) · `postEncargo` (HTTP Request) · `Send Email`
+
+**Resultado:** La tarea de preparación se asigna automáticamente en Bonita y el cliente recibe confirmación por correo sin intervención manual del operador.
+
+![Flujo 3 n8n — Gestión de Encargos](docs/images/n8n_flujo3_encargos.png)
 ![Bandeja de Bonita BPM](docs/images/bonita_bandeja.png)
 
 ---
