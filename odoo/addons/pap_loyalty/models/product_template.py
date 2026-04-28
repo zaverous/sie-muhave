@@ -22,3 +22,8 @@ class ProductTemplate(models.Model):
         string='Coste en Puntos',
         default=0,
     )
+    minimum_stock = fields.Integer(
+        string='Stock Mínimo',
+        default=0,
+        help='Umbral mínimo de unidades en almacén. n8n lo lee al confirmar un encargo para decidir si lanzar un proceso de reposición en Bonita BPM.',
+    )

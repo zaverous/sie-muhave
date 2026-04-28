@@ -15,6 +15,12 @@
                     <field name="loyalty_ratio"/>
                 </group>
             </xpath>
+            <xpath expr="//div[@name='options']" position="inside">
+                <span class="d-inline-block">
+                    <field name="minimum_stock" class="oe_inline"/>
+                    <label for="minimum_stock"/>
+                </span>
+            </xpath>
         </field>
     </record>
 
